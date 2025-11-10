@@ -243,7 +243,7 @@ db.clientes.find({ nombre: /María/ });
 
 ## 🔐 Seguridad y Autenticación
 
-```javascript
+```
 use admin
 db.createUser({
   user: "dbAdmin",
