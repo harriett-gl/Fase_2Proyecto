@@ -1,429 +1,332 @@
-# Sistema de Alta Disponibilidad PostgreSQL
-## Proyecto Final - Base de Datos 2
+# 🚀 Proyecto Final – Sistema de Alta Disponibilidad y Arquitectura Híbrida SQL/NoSQL  
 
-### Universidad Rafael Landívar
-**Materia:** Base de Datos 2  
-**Segundo Semestre 2025**  
-**Fecha:** 16 de octubre de 2024  
-**Empresa:** Pollo Sanjuanero S.A.
+**📚 Curso:** Base de Datos 2  
+**🏛️ Universidad:** Universidad Rafael Landívar  
+**📆 Semestre:** Segundo Semestre 2025  
+**🏢 Empresa:** Pollo Sanjuanero S.A.  
 
----
-
-## 📋 Descripción del Proyecto
-
-Este proyecto implementa un **sistema de alta disponibilidad** para bases de datos PostgreSQL, diseñado para la empresa Pollo Sanjuanero S.A. El sistema incluye replicación streaming, failover manual, y una política de respaldos con retención de 7 días.
-
-### 🎯 Objetivos Cumplidos
-
-✅ **Arquitectura de 3 nodos:**
-- **Nodo Primario:** Acepta lecturas y escrituras
-- **Nodo Standby:** Réplica en espera para failover
-- **Nodo de Solo Lectura:** Optimizado para consultas
-
-✅ **Replicación Streaming:** Configurada entre los 3 nodos  
-✅ **Failover Manual:** Implementado con scripts automatizados  
-✅ **Política de Respaldos:** Full backup semanal + incrementales diarios  
-✅ **Retención de Datos:** Configurada para 7 días automáticamente  
-✅ **Análisis de Costos:** Comparativa completa de alternativas tecnológicas
+**👩‍💻 Autora:** Harriett Guzmán y Eduardo Hernández 
 
 ---
 
-## 🏗️ Arquitectura del Sistema
+## 🧩 Descripción General
+
+Este proyecto forma parte del curso **Base de Datos 2** y tiene como objetivo la creación de una **arquitectura de datos híbrida** compuesta por:
+
+- 🐘 **PostgreSQL** → Sistema relacional de alta disponibilidad (Fase 1)  
+- 🍃 **MongoDB** → Sistema NoSQL con replicación y autenticación (Fase 2)  
+
+Ambas fases trabajan en conjunto para ofrecer un sistema **resiliente, escalable y seguro**, garantizando el almacenamiento tanto de datos estructurados como no estructurados.
+
+---
+
+## ⚙️ Fase 1 – Alta Disponibilidad con PostgreSQL (Resumen)
+
+La **Fase 1** implementó una infraestructura de **tres nodos** en PostgreSQL utilizando **replicación streaming**, **failover manual** y **respaldos automáticos** con retención de 7 días.
+
+### 🧠 Arquitectura PostgreSQL
 
 ```
+
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   Nodo Primario │    │  Nodo Standby   │    │ Nodo Solo Lectura│
-│  (Puerto 15432) │    │  (Puerto 15433) │    │  (Puerto 15434) │
-│                 │    │                 │    │                 │
-│ ✅ Lecturas     │────▶│ 📥 Streaming    │    │ 📥 Streaming    │
-│ ✅ Escrituras   │    │ 🔄 Failover     │    │ 📖 Solo Lectura │
-│ 💾 Backups      │    │ 📊 Monitoreo    │    │ 📊 Reportes     │
+│ 🟢 Nodo Primario │    │ 🟡 Nodo Standby │    │ 🔵 Nodo Lectura │
+│ (Puerto 15432)  │    │ (Puerto 15433)  │    │ (Puerto 15434)  │
+│ ✅ Escritura     │    │ 🔄 Failover     │    │ 📖 Consultas     │
 └─────────────────┘    └─────────────────┘    └─────────────────┘
-         │
-         ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                    Sistema de Backups                          │
-│  📦 Full Backup (Semanal) + 📊 Incremental (Diario)          │
-│  🗑️ Retención automática de 7 días                           │
-└─────────────────────────────────────────────────────────────────┘
+
+```
+
+📊 **Características clave:**
+- Replicación streaming entre tres nodos.  
+- Failover manual con scripts automatizados.  
+- Política de respaldos incremental.  
+- Disponibilidad del 99.9 %.  
+- **RTO < 5 minutos | RPO < 1 minuto.**
+
+🔗 **Ver más detalles:** [`README_Fase1_PostgreSQL.md`](README_Fase1_PostgreSQL.md)
+
+---
+
+## 🍃 Fase 2 – Arquitectura NoSQL con MongoDB Replica Set
+
+En la segunda fase se implementó una **arquitectura NoSQL** utilizando **MongoDB Replica Set** (1 primario y 2 secundarios), desplegado con **Docker Compose**.  
+Además, se realizó la **integración manual SQL → NoSQL**, exportando datos de PostgreSQL e importándolos en MongoDB.
+
+### 🎯 Objetivos Específicos
+✅ Configurar un Replica Set con tres nodos usando Docker.  
+✅ Modelar colecciones (`rutas_entrega`, `comentarios_clientes`, `historial_fallas`).  
+✅ Insertar datos de prueba y ejecutar consultas.  
+✅ Simular failover manual y automático.  
+✅ Crear usuario administrador con autenticación SCRAM-SHA-1.  
+✅ Integrar datos desde PostgreSQL en formato JSON/CSV.  
+
+---
+
+## 🏗️ Arquitectura del Replica Set
+
+```
+
+            +---------------------------+
+            | ⭐ Nodo Primario          |
+            | mongo-primary:27017       |
+            | (Lectura/Escritura)       |
+            +-----------+---------------+
+                  |                   |
+                  |                   |
+                  |                   |
+                  v                   v
+        +------------------+    +--------------------+
+        | 🟢 Nodo Secundario |  | 🔵 Nodo Secundario |
+        | mongo-secondary1   |  | mongo-secondary2   |
+        | (Solo Lectura)     |  | (Solo Lectura)     |
+        +------------------+    +--------------------+
+
+````
+
+📡 Identificador del Replica Set: `rsPolloSanjuanero`  
+🌐 Red interna Docker: `mongo-cluster`
+
+---
+
+## 🐳 Configuración con Docker Compose
+
+Archivo `docker-compose.yml`:
+
+```yaml
+version: '3.8'
+services:
+  mongo-primary:
+    image: mongo:7
+    container_name: mongo-primary
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=admin123
+    volumes:
+      - ./data/primary:/data/db
+    networks:
+      - mongo-cluster
+
+  mongo-secondary1:
+    image: mongo:7
+    container_name: mongo-secondary1
+    ports:
+      - "27018:27017"
+    networks:
+      - mongo-cluster
+
+  mongo-secondary2:
+    image: mongo:7
+    container_name: mongo-secondary2
+    ports:
+      - "27019:27017"
+    networks:
+      - mongo-cluster
+
+networks:
+  mongo-cluster:
+    driver: bridge
+````
+
+### ▶️ Inicialización del Replica Set
+
+```bash
+docker exec -it mongo-primary mongosh -u admin -p admin123
+```
+
+```javascript
+rs.initiate({
+  _id: "rsPolloSanjuanero",
+  members: [
+    { _id: 0, host: "mongo-primary:27017" },
+    { _id: 1, host: "mongo-secondary1:27017" },
+    { _id: 2, host: "mongo-secondary2:27017" }
+  ]
+});
+```
+
+🧾 Verificar estado:
+
+```javascript
+rs.status();
 ```
 
 ---
 
-## 🚀 Instalación y Configuración
+## 🗃️ Modelado de Datos
 
-### Pre-requisitos
+### 🚚 Colección: `rutas_entrega`
 
-- **Docker** y **Docker Compose** instalados
-- **PostgreSQL Client** (psql) para pruebas
-- **Bash** para ejecutar scripts
-- Al menos **8GB RAM** disponible
-- **Red estable** entre nodos
-
-### 1. Clonar el Repositorio
-
-```bash
-git clone <repository-url>
-cd proyecto_Bases_2
+```json
+{
+  "_id": "RUTA001",
+  "fecha": "2025-10-30",
+  "conductor": "Juan Pérez",
+  "vehiculo": "Placas P123ABC",
+  "coordenadas": [
+    {"lat": 14.6349, "lon": -90.5069, "hora": "08:00"},
+    {"lat": 14.6350, "lon": -90.5075, "hora": "08:30"}
+  ],
+  "estado": "completada"
+}
 ```
 
-### 2. Configuración Inicial
+### 💬 Colección: `comentarios_clientes`
 
-El proyecto incluye todas las configuraciones necesarias:
-
-```
-proyecto_Bases_2/
-├── config/
-│   ├── primary/          # Configuración nodo primario
-│   ├── standby/          # Configuración nodo standby
-│   └── readonly/         # Configuración nodo solo lectura
-├── scripts/              # Scripts de automatización
-├── backups/              # Directorio de respaldos
-└── documentacion/        # Documentación completa
+```json
+{
+  "_id": "COM123",
+  "cliente_id": "CLI45",
+  "fecha": "2025-10-29",
+  "comentario": "Excelente servicio",
+  "calificacion": 5
+}
 ```
 
-### 3. Iniciar el Sistema
+### ⚙️ Colección: `historial_fallas`
 
-#### Opción A: Inicio Completo Automático
-```bash
-# Crear red Docker
-docker network create postgres-ha
-
-# Iniciar nodo primario
-docker run -d --name postgres-primary --network postgres-ha -p 15432:5432 \
-  -e POSTGRES_DB=pollo_sanjuanero \
-  -e POSTGRES_USER=postgres \
-  -e POSTGRES_PASSWORD=postgres123 \
-  -v $(pwd)/backups:/backups \
-  -v $(pwd)/scripts:/scripts \
-  postgres:15
-
-# Esperar y configurar
-sleep 15
-```
-
-#### Opción B: Usando Docker Compose (Simplificado)
-```bash
-docker-compose -f docker-compose-final.yml up -d
-```
-
-### 4. Configurar Replicación
-
-```bash
-# Ejecutar configuración de replicación
-./scripts/setup-replication.sh
+```json
+{
+  "_id": "FALLA001",
+  "fecha_reporte": "2025-10-28",
+  "area": "Transporte",
+  "descripcion": "Falla en sistema de refrigeración",
+  "resuelto": false
+}
 ```
 
 ---
 
-## 📊 Uso del Sistema
+## 🔁 Integración SQL → NoSQL
 
-### Conexiones a los Nodos
-
-#### Nodo Primario (Lectura/Escritura)
-```bash
-psql -h localhost -p 15432 -U postgres -d pollo_sanjuanero
-```
-
-#### Nodo Standby (Failover)
-```bash
-psql -h localhost -p 15433 -U postgres -d pollo_sanjuanero
-```
-
-#### Nodo Solo Lectura (Consultas)
-```bash
-psql -h localhost -p 15434 -U postgres -d pollo_sanjuanero
-```
-
-**Credenciales:**
-- **Usuario:** `postgres`
-- **Contraseña:** `postgres123`
-- **Base de Datos:** `pollo_sanjuanero`
-
-### Probar Replicación
-
-```bash
-# Ejecutar pruebas de replicación
-docker exec postgres-primary psql -U postgres -f /scripts/test-replication.sql
-```
-
-### Ejecutar Failover Manual
-
-```bash
-# Simular falla y failover
-./scripts/demo-failover.sh
-```
-
-### Gestión de Respaldos
-
-```bash
-# Configurar directorios de backup
-./scripts/backup-policy.sh setup
-
-# Ejecutar backup completo
-./scripts/backup-policy.sh full
-
-# Ejecutar backup incremental
-./scripts/backup-policy.sh incremental
-
-# Ver estado de backups
-./scripts/backup-policy.sh status
-```
-
----
-
-## 📈 Monitoreo y Administración
-
-### Estado de Replicación
+### 📤 Exportar desde PostgreSQL
 
 ```sql
--- En el nodo primario
-SELECT client_addr, application_name, state, sync_state 
-FROM pg_stat_replication;
-
--- Verificar slots de replicación
-SELECT slot_name, slot_type, active, restart_lsn 
-FROM pg_replication_slots;
+COPY (SELECT id_cliente, nombre, telefono, correo FROM clientes)
+TO '/tmp/clientes.csv' DELIMITER ',' CSV HEADER;
 ```
 
-### Estado de los Nodos
-
-```sql
--- Verificar si está en modo recovery (standby)
-SELECT pg_is_in_recovery();
-
--- Ver último WAL recibido
-SELECT pg_last_wal_receive_lsn();
-
--- Ver último WAL aplicado  
-SELECT pg_last_wal_replay_lsn();
-```
-
-### Logs del Sistema
+### 📥 Importar a MongoDB
 
 ```bash
-# Ver logs de cada nodo
-docker logs postgres-primary
-docker logs postgres-standby  
-docker logs postgres-readonly
+mongoimport --db pollo_sanjuanero --collection clientes \
+  --type csv --headerline --file /tmp/clientes.csv \
+  --host localhost --port 27017 -u admin -p admin123 --authenticationDatabase admin
+```
 
-# Logs de backup
-tail -f backups/backup.log
+🔎 Verificación:
+
+```javascript
+db.clientes.find().pretty();
 ```
 
 ---
 
-## 🔧 Scripts Disponibles
+## 🔍 Consultas de Ejemplo
 
-| Script | Descripción | Uso |
-|--------|-------------|-----|
-| `setup-replication.sh` | Configuración inicial completa | `./scripts/setup-replication.sh` |
-| `demo-failover.sh` | Demostración de failover | `./scripts/demo-failover.sh` |
-| `backup-policy.sh` | Gestión de respaldos | `./scripts/backup-policy.sh [comando]` |
-| `init-primary.sql` | Inicialización del primario | Ejecutado automáticamente |
-| `test-replication.sql` | Pruebas de replicación | Ejecutado vía psql |
+```javascript
+// 🛣️ Rutas completadas
+db.rutas_entrega.find({ estado: "completada" });
 
-### Comandos de Backup
+// 🌟 Comentarios con calificación máxima
+db.comentarios_clientes.find({ calificacion: 5 });
 
-```bash
-./scripts/backup-policy.sh setup        # Configurar
-./scripts/backup-policy.sh full         # Backup completo
-./scripts/backup-policy.sh incremental  # Backup incremental
-./scripts/backup-policy.sh status       # Estado actual
-./scripts/backup-policy.sh cleanup      # Limpiar antiguos
+// ⚠️ Fallas no resueltas
+db.historial_fallas.find({ resuelto: false });
+
+// 👤 Buscar cliente por nombre
+db.clientes.find({ nombre: /María/ });
 ```
 
 ---
 
-## 🛠️ Configuraciones Técnicas
+## 🔐 Seguridad y Autenticación
 
-### Parámetros Clave PostgreSQL
+```javascript
+use admin
+db.createUser({
+  user: "dbAdmin",
+  pwd: "securePass123",
+  roles: [{ role: "root", db: "admin" }]
+});
+```
 
-#### Nodo Primario
-- `wal_level = replica`
-- `max_wal_senders = 3`  
-- `wal_keep_size = 1GB`
-- `archive_mode = on`
-- `hot_standby = on`
-
-#### Nodos Secundarios  
-- `primary_conninfo = 'host=postgres-primary...'`
-- `standby.signal` (archivo de control)
-- `hot_standby = on`
-- `max_standby_streaming_delay = 300s`
-
-### Puertos y Red
-
-- **Primario:** localhost:15432
-- **Standby:** localhost:15433  
-- **Solo Lectura:** localhost:15434
-- **Red Docker:** `postgres-ha`
+🔒 Autenticación activada con `SCRAM-SHA-1`.
 
 ---
 
-## 📚 Documentación Adicional
+## ⚡ Pruebas de Failover
 
-### Archivos de Documentación
+1. Ver nodo primario:
 
-- [`documentacion/investigacion-costos-alternativas.md`](documentacion/investigacion-costos-alternativas.md) - Análisis completo de alternativas y costos
-- Configuraciones en `config/` - Archivos postgresql.conf y pg_hba.conf
-- Scripts comentados en `scripts/` - Lógica de implementación
+   ```javascript
+   rs.status()
+   ```
+2. Detener nodo primario:
 
-### Estructura de la Base de Datos
+   ```bash
+   docker stop mongo-primary
+   ```
+3. Observar elección de nuevo primario:
 
-**Esquemas creados:**
-- `ventas` - Gestión de clientes, pedidos y ventas
-- `inventario` - Control de productos y stock  
-- `administracion` - Auditoría y logs del sistema
-
-**Tablas principales:**
-- `ventas.clientes` - Información de clientes
-- `inventario.productos` - Catálogo de productos
-- `ventas.pedidos` - Órdenes de compra
-- `administracion.audit_trail` - Auditoría automática
+   ```javascript
+   rs.status()
+   ```
+4. Reiniciar nodo detenido y confirmar reintegración.
 
 ---
 
-## 🔍 Troubleshooting
+## 📊 Comparativa SQL vs NoSQL
 
-### Problemas Comunes
+| 🧠 Aspecto          | 🐘 PostgreSQL (SQL)   | 🍃 MongoDB (NoSQL)            |
+| ------------------- | --------------------- | ----------------------------- |
+| Modelo de datos     | Tablas relacionales   | Documentos JSON               |
+| Escalabilidad       | Vertical              | Horizontal (Replica/Sharding) |
+| Integridad          | Llaves foráneas, ACID | Documentos embebidos          |
+| Consultas           | SQL                   | BSON/JSON dinámico            |
+| Alta disponibilidad | Streaming replication | Replica Set nativo            |
+| Ideal para          | Datos estructurados   | Datos no estructurados        |
 
-#### 1. Error de Conexión
-```bash
-# Verificar que el contenedor está corriendo
-docker ps
+---
 
-# Reiniciar si es necesario
-docker restart postgres-primary
+## 🧾 Conclusiones Generales
+
+* ✅ **MongoDB** amplió la arquitectura hacia un entorno más flexible y dinámico.
+* 🔄 La **replicación** demostró alta disponibilidad y recuperación automática.
+* 🧠 La integración **SQL → NoSQL** permitió combinar datos transaccionales con operativos.
+* 🧱 PostgreSQL sigue siendo ideal para operaciones estructuradas, mientras que MongoDB lo complementa para datos flexibles.
+* 🌍 Se logró una arquitectura **híbrida, segura y escalable** para la empresa *Pollo Sanjuanero S.A.*.
+
+---
+
+## 📂 Estructura del Repositorio
+
 ```
-
-#### 2. Replicación No Funciona
-```bash
-# Verificar logs
-docker logs postgres-standby
-
-# Verificar configuración de red
-docker network ls
-docker network inspect postgres-ha
-```
-
-#### 3. Espacio de Backup
-```bash
-# Verificar espacio disponible
-du -sh backups/*
-
-# Limpiar backups antiguos
-./scripts/backup-policy.sh cleanup
-```
-
-#### 4. Failover No Responde
-```bash
-# Verificar estado del standby
-docker exec postgres-standby pg_isready -U postgres
-
-# Verificar archivos de recovery
-docker exec postgres-standby ls -la /var/lib/postgresql/data/ | grep signal
-```
-
-### Comandos de Diagnóstico
-
-```bash
-# Estado general del sistema
-docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
-
-# Uso de recursos
-docker stats --no-stream
-
-# Verificar configuración
-docker exec postgres-primary cat /var/lib/postgresql/data/postgresql.conf | grep -E "(wal_level|max_wal_senders|hot_standby)"
+Fase_2Proyecto/
+├── README.md                     # Fase 2 (MongoDB)
+├── README_Fase1_PostgreSQL.md    # Fase 1 (PostgreSQL)
+├── docker-compose.yml
+├── documentacion/
+│   ├── evidencias_postgresql/
+│   └── evidencias_mongodb/
+└── scripts/
 ```
 
 ---
 
-## 📊 Métricas y KPIs
+## 👩‍💻 Autora
 
-### Indicadores de Rendimiento
+**Harriett Guzmán**
+*Universidad Rafael Landívar – Base de Datos 2 – 2025*
 
-- **RTO (Recovery Time Objective):** < 5 minutos
-- **RPO (Recovery Point Objective):** < 1 minuto  
-- **Disponibilidad:** 99.9% objetivo
-- **Replicación Lag:** < 100ms en red local
+✨ *Proyecto académico diseñado para demostrar competencias en administración, replicación y análisis comparativo entre bases de datos SQL y NoSQL.*
 
-### Métricas de Backup
-
-- **Full Backup:** Semanal, ~30MB comprimido
-- **Incremental:** Diario, ~5-10MB por día  
-- **Retención:** 7 días automática
-- **Tiempo de Backup:** < 2 minutos para full
-
----
-
-## 👥 Equipo de Desarrollo
-
-**Universidad Rafael Landívar**  
-**Curso:** Base de Datos 2 - Segundo Semestre 2025
-
-**Tecnologías Utilizadas:**
-- PostgreSQL 15
-- Docker & Docker Compose  
-- Bash Scripting
-- Streaming Replication
-- WAL Archiving
-
----
-
-## 📄 Licencia
-
-Este proyecto es desarrollado con fines académicos para la Universidad Rafael Landívar.
-
-**Tecnologías Open Source utilizadas:**
-- PostgreSQL (PostgreSQL License)
-- Docker (Apache 2.0)
-
----
-
-## ✅ Estado del Proyecto
-
-**Fase 1 - COMPLETADA ✅**
-
-- [x] Arquitectura de 3 nodos implementada
-- [x] Replicación streaming funcionando  
-- [x] Failover manual probado
-- [x] Política de respaldos configurada
-- [x] Análisis de costos completado
-- [x] Documentación técnica generada
-- [x] Scripts de automatización creados
-
-**Entregables:**
-- ✅ Sistema funcionando
-- ✅ Documentación completa  
-- ✅ Scripts automatizados
-- ✅ Análisis de alternativas
-- ✅ Evidencias de funcionamiento
-
----
-
-## 📞 Soporte
-
-Para preguntas sobre la implementación:
-
-1. Revisar la documentación en `documentacion/`
-2. Verificar logs en `backups/backup.log`
-3. Consultar scripts comentados en `scripts/`
-4. Revisar troubleshooting en este README
-
-**Comandos rápidos de verificación:**
-```bash
-# Estado completo del sistema
-docker ps && docker network ls
-
-# Conectividad básica
-psql -h localhost -p 15432 -U postgres -d pollo_sanjuanero -c "SELECT version();"
-
-# Logs recientes
-docker logs postgres-primary --tail 50
 ```
 
 ---
 
-*Proyecto desarrollado para demostrar competencias en administración de bases de datos de alta disponibilidad y análisis de alternativas tecnológicas.*
+💡 **Consejo:**  
+Copia todo este texto en un archivo llamado `README.md` dentro de tu repositorio `Fase_2Proyecto`.  
+GitHub mostrará automáticamente los emojis y la estructura visual cuando lo subas ✅
+```

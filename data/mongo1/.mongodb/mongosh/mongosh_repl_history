@@ -1,4 +1,22 @@
 exit
+db.historial_fallas.find()
+db.comentarios_clientes.find()
+db.rutas_entrega.find()
+use db_sanjuanero
+exit
+rs.status()
+exit
+rs.status()
+exit
+rs.status()
+exit
+db.clientes_migrados.find()
+db.historial_fallas.find()
+db.comentarios_clientes.find()
+db.rutas_entrega.find()
+use db_sanjuanero
+rs.status()
+exit
 db.clientes_migrados.find()
 use db_sanjuanero
 exit

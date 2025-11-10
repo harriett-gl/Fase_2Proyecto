@@ -2,3 +2,39 @@ exit
 db.clientes_migrados.find()
 use db_sanjuanero
 rs.secondaryOk()
+exit
+docker exec -it mongo1 mongosh -u adminPollo -p 'SanjuaneroPassword2025!' --authenticationDatabase admin
+rs.reconfig(cfg)
+// 3. Aplica la nueva configuración
+cfg.members[0].priority = 2
+//    (Dejamos mongo2 y mongo3 con prioridad '1')
+// 2. Cambia la prioridad de mongo1 (miembro 0) a '2'
+var cfg = rs.conf()
+// 1. Obtiene la configuración actual
+// 3. Aplica la nueva configuración
+cfg.members[0].priority = 2
+//    (Dejamos mongo2 y mongo3 con prioridad '1')
+// 2. Cambia la prioridad de mongo1 (miembro 0) a '2'
+var cfg = rs.conf()
+// 1. Obtiene la configuración actual
+var cfg = rs.conf() cfg.members[0].priority = 2 rs.reconfig(cfg)
+)
+  [ { role: "clusterManager", db: "admin" } ]
+  "adminPollo",
+db.grantRolesToUser(
+use admin
+exit
+)
+  [ { role: "clusterMonitor", db: "admin" } ]
+  "adminPollo",
+db.grantRolesToUser(
+use admin
+rs.status()
+exit
+db.clientes_migrados.find()
+use db_sanjuanero
+rs.secondaryOk()
+exit
+db.clientes_migrados.find()
+use db_sanjuanero
+rs.secondaryOk()
