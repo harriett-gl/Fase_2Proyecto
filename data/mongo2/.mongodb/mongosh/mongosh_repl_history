@@ -1,0 +1,4 @@
+exit
+db.clientes_migrados.find()
+use db_sanjuanero
+rs.secondaryOk()

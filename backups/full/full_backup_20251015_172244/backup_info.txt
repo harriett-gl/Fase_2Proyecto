@@ -1,0 +1,6 @@
+Backup Type: Full Backup
+Backup Name: full_backup_20251015_172244
+Date: Wed Oct 15 17:22:44 CST 2025
+Database: pollo_sanjuanero
+Server: postgres-primary
+Size: 4.2M

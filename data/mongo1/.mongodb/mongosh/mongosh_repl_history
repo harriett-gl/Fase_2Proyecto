@@ -1,0 +1,226 @@
+exit
+db.clientes_migrados.find()
+use db_sanjuanero
+db.clientes_migrados.find()
+use db_sanjuanero
+exit
+db.historial_fallas.find( { "area": "Transporte" } )
+db.comentarios_clientes.find()
+db.rutas_entrega.find()
+)db.rutas_entrega.find()
+)
+   }
+      "resuelto": false
+      "descripcion": "Falla en sistema de refrigeración del camión P123ABC.",
+      "area": "Transporte",
+      "fecha_reporte": "2025-10-28",
+      "_id": "FALLA001",
+   {
+db.historial_fallas.insertOne(
+// Insertar datos de prueba
+})
+   }
+      }
+         }
+            resuelto: { bsonType: "bool" }
+            descripcion: { bsonType: "string" },
+            area: { bsonType: "string", enum: ["Transporte", "Produccion", "Administracion"] },
+            fecha_reporte: { bsonType: "string", pattern: "^2025-\\d{2}-\\d{2}$" },
+            _id: { bsonType: "string", description: "ID de falla (ej. FALLA001)" },
+         properties: {
+         required: ["_id", "fecha_reporte", "area", "descripcion", "resuelto"],
+         bsonType: "object",
+      $jsonSchema: {
+   validator: {
+db.createCollection("historial_fallas", {
+// --- MODELO 3: historial_fallas ---
+)
+   }
+      "calificacion": 5
+      "comentario": "Excelente servicio, la entrega fue rápida.",
+      "fecha": "2025-10-29",
+      "cliente_id": "CLI45",
+      "_id": "COM123",
+   {
+db.comentarios_clientes.insertOne(
+// Insertar datos de prueba
+})
+   }
+      }
+         }
+            calificacion: { bsonType: "int", minimum: 1, maximum: 5 }
+            comentario: { bsonType: "string" },
+            fecha: { bsonType: "string", pattern: "^2025-\\d{2}-\\d{2}$" },
+            cliente_id: { bsonType: "string", description: "ID para integrar con PostgreSQL (ej. CLI45)" },
+            _id: { bsonType: "string", description: "ID de comentario (ej. COM123)" },
+         properties: {
+         required: ["_id", "cliente_id", "fecha", "comentario", "calificacion"],
+         bsonType: "object",
+      $jsonSchema: {
+   validator: {
+db.createCollection("comentarios_clientes", {
+// --- MODELO 2: comentarios_clientes ---
+)
+   }
+      "estado": "completada"
+      ],
+         {"lat": 14.6351, "lon": -90.5080, "hora": "09:00"}
+         {"lat": 14.6350, "lon": -90.5075, "hora": "08:30"},
+         {"lat": 14.6349, "lon": -90.5069, "hora": "08:00"},
+      "coordenadas": [
+      "vehiculo": "Placas P123ABC",
+      "conductor": "Juan Pérez",
+      "fecha": "2025-10-30",
+      "_id": "RUTA001",
+   {
+db.rutas_entrega.insertOne(
+// Insertar datos de prueba
+})
+   }
+      }
+         }
+            }
+               }
+                  }
+                     hora: { bsonType: "string", pattern: "^\\d{2}:\\d{2}$" }
+                     lon: { bsonType: "double" },
+                     lat: { bsonType: "double" },
+                  properties: {
+                  required: ["lat", "lon", "hora"],
+                  bsonType: "object",
+               items: {
+               bsonType: "array",
+            coordenadas: {
+            estado: { bsonType: "string", enum: ["pendiente", "en_progreso", "completada", "cancelada"] },
+            vehiculo: { bsonType: "string" },
+            conductor: { bsonType: "string" },
+            fecha: { bsonType: "string", pattern: "^2025-\\d{2}-\\d{2}$" },
+            _id: { bsonType: "string", description: "ID de ruta (ej. RUTA001)" },
+         properties: {
+         required: ["_id", "fecha", "conductor", "coordenadas", "estado"],
+         bsonType: "object",
+      $jsonSchema: {
+   validator: {
+db.createCollection("rutas_entrega", {
+ use db_sanjuanero
+)
+   }
+      "resuelto": false
+      "descripcion": "Falla en sistema de refrigeración del camión P123ABC.",
+      "area": "Transporte",
+      "fecha_reporte": "2025-10-28",
+      "_id": "FALLA001",
+   {
+db.historial_fallas.insertOne(
+// Insertar datos de prueba
+})
+   }
+      }
+         }
+            resuelto: { bsonType: "bool" }
+            descripcion: { bsonType: "string" },
+            area: { bsonType: "string", enum: ["Transporte", "Produccion", "Administracion"] },
+            fecha_reporte: { bsonType: "string", pattern: "^2025-\\d{2}-\\d{2}$" },
+            _id: { bsonType: "string", description: "ID de falla (ej. FALLA001)" },
+         properties: {
+         required: ["_id", "fecha_reporte", "area", "descripcion", "resuelto"],
+         bsonType: "object",
+      $jsonSchema: {
+   validator: {
+db.createCollection("historial_fallas", {
+// --- MODELO 3: historial_fallas ---
+)
+   }
+      "calificacion": 5
+      "comentario": "Excelente servicio, la entrega fue rápida.",
+      "fecha": "2025-10-29",
+      "cliente_id": "CLI45",
+      "_id": "COM123",
+   {
+db.comentarios_clientes.insertOne(
+// Insertar datos de prueba
+})
+   }
+      }
+         }
+            calificacion: { bsonType: "int", minimum: 1, maximum: 5 }
+            comentario: { bsonType: "string" },
+            fecha: { bsonType: "string", pattern: "^2025-\\d{2}-\\d{2}$" },
+            cliente_id: { bsonType: "string", description: "ID para integrar con PostgreSQL (ej. CLI45)" },
+            _id: { bsonType: "string", description: "ID de comentario (ej. COM123)" },
+         properties: {
+         required: ["_id", "cliente_id", "fecha", "comentario", "calificacion"],
+         bsonType: "object",
+      $jsonSchema: {
+   validator: {
+db.createCollection("comentarios_clientes", {
+// --- MODELO 2: comentarios_clientes ---
+)
+   }
+      "estado": "completada"
+      ],
+         {"lat": 14.6351, "lon": -90.5080, "hora": "09:00"}
+         {"lat": 14.6350, "lon": -90.5075, "hora": "08:30"},
+         {"lat": 14.6349, "lon": -90.5069, "hora": "08:00"},
+      "coordenadas": [
+      "vehiculo": "Placas P123ABC",
+      "conductor": "Juan Pérez",
+      "fecha": "2025-10-30",
+      "_id": "RUTA001",
+   {
+db.rutas_entrega.insertOne(
+// Insertar datos de prueba
+})
+   }
+      }
+         }
+            }
+               }
+                  }
+                     hora: { bsonType: "string", pattern: "^\\d{2}:\\d{2}$" }
+                     lon: { bsonType: "double" },
+                     lat: { bsonType: "double" },
+                  properties: {
+                  required: ["lat", "lon", "hora"],
+                  bsonType: "object",
+               items: {
+               bsonType: "array",
+            coordenadas: {
+            estado: { bsonType: "string", enum: ["pendiente", "en_progreso", "completada", "cancelada"] },
+            vehiculo: { bsonType: "string" },
+            conductor: { bsonType: "string" },
+            fecha: { bsonType: "string", pattern: "^2025-\\d{2}-\\d{2}$" },
+            _id: { bsonType: "string", description: "ID de ruta (ej. RUTA001)" },
+         properties: {
+         required: ["_id", "fecha", "conductor", "coordenadas", "estado"],
+         bsonType: "object",
+      $jsonSchema: {
+   validator: {
+db.createCollection("rutas_entrega", {
+// Define la colección y su validación (Schema Validation)
+// --- MODELO 1: rutas_entrega ---
+use db_sanjuanero
+// 1. Usar la base de datos del proyecto
+exit
+)
+   }
+     mechanisms: [ "SCRAM-SHA-1" ]
+     ],
+        { role: "readWriteAnyDatabase", db: "admin" }
+        { role: "userAdminAnyDatabase", db: "admin" },
+     roles: [
+     pwd: "SanjuaneroPassword2025!", 
+     user: "adminPollo",
+   {
+use admin
+rs.status()
+)
+  }
+    ]
+      { _id: 2, host: "mongo3:27017" }
+      { _id: 1, host: "mongo2:27017" },
+      { _id: 0, host: "mongo1:27017" },
+    members: [
+    _id: "rs0",
+  {
+rs.initiate(

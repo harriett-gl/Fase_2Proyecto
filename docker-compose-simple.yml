@@ -1,0 +1,115 @@
+version: '3.8'
+
+services:
+  # Nodo Primario
+  postgres-primary:
+    image: postgres:15
+    container_name: postgres-primary
+    environment:
+      POSTGRES_DB: pollo_sanjuanero
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres123
+    ports:
+      - "15432:5432"
+    volumes:
+      - primary_data:/var/lib/postgresql/data
+      - ./config/primary/postgresql.conf:/var/lib/postgresql/data/postgresql.conf:ro
+      - ./config/primary/pg_hba.conf:/var/lib/postgresql/data/pg_hba.conf:ro
+      - ./backups:/backups
+      - ./scripts:/scripts
+    networks:
+      - postgres-network
+    command: postgres -c 'config_file=/var/lib/postgresql/data/postgresql.conf'
+
+  # Nodo Standby
+  postgres-standby:
+    image: postgres:15
+    container_name: postgres-standby
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres123
+      PGPASSWORD: replicator123
+    ports:
+      - "15433:5432"
+    volumes:
+      - standby_data:/var/lib/postgresql/data
+      - ./backups:/backups
+      - ./scripts:/scripts
+    depends_on:
+      - postgres-primary
+    networks:
+      - postgres-network
+    command: >
+      bash -c "
+        # Esperar a que el primario esté listo
+        until pg_isready -h postgres-primary -p 5432 -U postgres; do
+          sleep 2
+        done
+        
+        # Si no existe la base de datos, crear réplica
+        if [ ! -f /var/lib/postgresql/data/PG_VERSION ]; then
+          echo 'Creando réplica desde el primario...'
+          pg_basebackup -h postgres-primary -D /var/lib/postgresql/data -U replicator -v -P
+          
+          # Configurar como standby
+          echo 'standby_mode = on' >> /var/lib/postgresql/data/postgresql.conf
+          echo \"primary_conninfo = 'host=postgres-primary port=5432 user=replicator password=replicator123'\" >> /var/lib/postgresql/data/postgresql.conf
+          echo \"primary_slot_name = 'standby_slot'\" >> /var/lib/postgresql/data/postgresql.conf
+          
+          chown -R postgres:postgres /var/lib/postgresql/data
+        fi
+        
+        # Iniciar PostgreSQL
+        su-exec postgres postgres
+      "
+
+  # Nodo Solo Lectura
+  postgres-readonly:
+    image: postgres:15
+    container_name: postgres-readonly
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres123
+      PGPASSWORD: replicator123
+    ports:
+      - "15434:5432"
+    volumes:
+      - readonly_data:/var/lib/postgresql/data
+      - ./scripts:/scripts
+    depends_on:
+      - postgres-primary
+    networks:
+      - postgres-network
+    command: >
+      bash -c "
+        # Esperar a que el primario esté listo
+        until pg_isready -h postgres-primary -p 5432 -U postgres; do
+          sleep 2
+        done
+        
+        # Si no existe la base de datos, crear réplica
+        if [ ! -f /var/lib/postgresql/data/PG_VERSION ]; then
+          echo 'Creando réplica de solo lectura...'
+          pg_basebackup -h postgres-primary -D /var/lib/postgresql/data -U replicator -v -P
+          
+          # Configurar como standby de solo lectura
+          echo 'standby_mode = on' >> /var/lib/postgresql/data/postgresql.conf
+          echo \"primary_conninfo = 'host=postgres-primary port=5432 user=replicator password=replicator123'\" >> /var/lib/postgresql/data/postgresql.conf
+          echo \"primary_slot_name = 'readonly_slot'\" >> /var/lib/postgresql/data/postgresql.conf
+          echo 'hot_standby = on' >> /var/lib/postgresql/data/postgresql.conf
+          
+          chown -R postgres:postgres /var/lib/postgresql/data
+        fi
+        
+        # Iniciar PostgreSQL
+        su-exec postgres postgres
+      "
+
+volumes:
+  primary_data:
+  standby_data:
+  readonly_data:
+
+networks:
+  postgres-network:
+    driver: bridge

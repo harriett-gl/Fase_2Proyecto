@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  postgres-primary:
+    image: postgres:15
+    container_name: postgres-primary
+    environment:
+      POSTGRES_DB: pollo_sanjuanero
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres123
+    ports:
+      - "15432:5432"
+    volumes:
+      - ./backups:/backups
+      - ./scripts:/scripts
+    networks:
+      - postgres-ha
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  primary_data:
+
+networks:
+  postgres-ha:
+    driver: bridge

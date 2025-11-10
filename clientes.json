@@ -1,0 +1,14 @@
+[
+  {
+    "cliente_id": "CLI001",
+    "nombre": "Ana Gomez (Prueba)",
+    "email": "ana@email.com",
+    "telefono": "11223344"
+  },
+  {
+    "cliente_id": "CLI002",
+    "nombre": "Luis Fernandez (Prueba)",
+    "email": "luis@email.com",
+    "telefono": "55667788"
+  }
+]

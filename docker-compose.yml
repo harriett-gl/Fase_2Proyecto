@@ -1,0 +1,189 @@
+version: '3.8'
+
+services:
+  # --- Servicios MongoDB (Fase 2) ---
+
+  # Nodo Primario
+  mongo1:
+    image: mongo:latest
+    container_name: mongo1
+    volumes:
+      - ./data/mongo1:/data/db
+      - ./keyfile.txt:/opt/keyfile.txt
+    ports:
+      - "27017:27017"
+    command: mongod --replSet rs0 --bind_ip 0.0.0.0 --auth --keyFile /opt/keyfile.txt
+    networks:
+      - mongo-replica-net
+    restart: always
+
+  # Nodo Secundario 1
+  mongo2:
+    image: mongo:latest
+    container_name: mongo2
+    volumes:
+      - ./data/mongo2:/data/db
+      - ./keyfile.txt:/opt/keyfile.txt
+    ports:
+      - "27018:27017"
+    command: mongod --replSet rs0 --bind_ip 0.0.0.0 --auth --keyFile /opt/keyfile.txt
+    networks:
+      - mongo-replica-net
+    restart: always
+
+  # Nodo Secundario 2
+  mongo3:
+    image: mongo:latest
+    container_name: mongo3
+    volumes:
+      - ./data/mongo3:/data/db
+      - ./keyfile.txt:/opt/keyfile.txt
+    ports:
+      - "27019:27017"
+    command: mongod --replSet rs0 --bind_ip 0.0.0.0 --auth --keyFile /opt/keyfile.txt
+    networks:
+      - mongo-replica-net
+    restart: always
+
+  # --- Servicios PostgreSQL (Fase 1) ---
+
+  # Nodo Primario - acepta lecturas y escrituras
+  postgres-primary:
+    image: postgres:15
+    container_name: postgres-primary
+    environment:
+      POSTGRES_DB: pollo_sanjuanero
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres123
+      POSTGRES_REPLICATION_USER: replicator
+      POSTGRES_REPLICATION_PASSWORD: replicator123
+    ports:
+      - "15432:5432"
+    volumes:
+      - primary_data:/var/lib/postgresql/data
+      - ./config/primary/postgresql.conf:/etc/postgresql/postgresql.conf
+      - ./config/primary/pg_hba.conf:/etc/postgresql/pg_hba.conf
+      - ./backups:/backups
+      - ./scripts:/scripts
+    command: >
+      bash -c "
+        docker-entrypoint.sh postgres -c config_file=/etc/postgresql/postgresql.conf -c hba_file=/etc/postgresql/pg_hba.conf
+      "
+    networks:
+      - postgres-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Nodo Standby - réplica en espera
+  postgres-standby:
+    image: postgres:15
+    container_name: postgres-standby
+    environment:
+      POSTGRES_DB: pollo_sanjuanero
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres123
+      PGUSER: postgres
+    ports:
+      - "15433:5432"
+    volumes:
+      - standby_data:/var/lib/postgresql/data
+      - ./config/standby/postgresql.conf:/etc/postgresql/postgresql.conf
+      - ./config/standby/pg_hba.conf:/etc/postgresql/pg_hba.conf
+      - ./scripts:/scripts
+    depends_on:
+      postgres-primary:
+        condition: service_healthy
+    command: >
+      bash -c "
+        until pg_isready -h postgres-primary -p 5432 -U postgres; do
+          echo 'Esperando que el primario esté listo...'
+          sleep 2
+        done
+      
+        if [ ! -f /var/lib/postgresql/data/PG_VERSION ]; then
+          echo 'Creando réplica desde el primario...'
+          PGPASSWORD=replicator123 pg_basebackup -h postgres-primary -D /var/lib/postgresql/data -U replicator -v -P
+          echo 'standby_mode = on' >> /var/lib/postgresql/data/postgresql.conf
+          echo 'primary_conninfo = \'host=postgres-primary port=5432 user=replicator password=replicator123\'' >> /var/lib/postgresql/data/postgresql.conf
+        fi
+      
+        su postgres -c 'postgres -c config_file=/etc/postgresql/postgresql.conf -c hba_file=/etc/postgresql/pg_hba.conf'
+      "
+    networks:
+      - postgres-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Nodo de Solo Lectura
+  postgres-readonly:
+    image: postgres:15
+    container_name: postgres-readonly
+    environment:
+      POSTGRES_DB: pollo_sanjuanero
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres123
+      PGUSER: postgres
+    ports:
+      - "15434:5432"
+    volumes:
+      - readonly_data:/var/lib/postgresql/data
+      - ./config/readonly/postgresql.conf:/etc/postgresql/postgresql.conf
+      - ./config/readonly/pg_hba.conf:/etc/postgresql/pg_hba.conf
+      - ./scripts:/scripts
+    depends_on:
+      postgres-primary:
+        condition: service_healthy
+    command: >
+      bash -c "
+        until pg_isready -h postgres-primary -p 5432 -U postgres; do
+          echo 'Esperando que el primario esté listo...'
+          sleep 2
+        done
+      
+        if [ ! -f /var/lib/postgresql/data/PG_VERSION ]; then
+          echo 'Creando réplica de solo lectura...'
+          PGPASSWORD=replicator123 pg_basebackup -h postgres-primary -D /var/lib/postgresql/data -U replicator -v -P
+          echo 'standby_mode = on' >> /var/lib/postgresql/data/postgresql.conf
+          echo 'primary_conninfo = \'host=postgres-primary port=5432 user=replicator password=replicator123\'' >> /var/lib/postgresql/data/postgresql.conf
+        fi
+      
+        su postgres -c 'postgres -c config_file=/etc/postgresql/postgresql.conf -c hba_file=/etc/postgresql/pg_hba.conf'
+      "
+    networks:
+      - postgres-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Servicio para gestión de backups
+  backup-manager:
+    image: postgres:15
+    container_name: backup-manager
+    volumes:
+      - ./backups:/backups
+      - ./scripts:/scripts
+    depends_on:
+      - postgres-primary
+    networks:
+      - postgres-network
+    command: tail -f /dev/null
+
+volumes:
+  primary_data:
+  standby_data:
+  readonly_data:
+  # Los volúmenes de Mongo se crean dinámicamente con './data/mongoX'
+
+networks:
+  mongo-replica-net:
+    driver: bridge
+  postgres-network:
+    driver: bridge # <-- Error corregido (era 'drive')r: bridge
