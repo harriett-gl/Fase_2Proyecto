@@ -314,19 +314,3 @@ Fase_2Proyecto/
 ```
 
 ---
-
-## 👩‍💻 Autora
-
-**Harriett Guzmán**
-*Universidad Rafael Landívar – Base de Datos 2 – 2025*
-
-✨ *Proyecto académico diseñado para demostrar competencias en administración, replicación y análisis comparativo entre bases de datos SQL y NoSQL.*
-
-```
-
----
-
-💡 **Consejo:**  
-Copia todo este texto en un archivo llamado `README.md` dentro de tu repositorio `Fase_2Proyecto`.  
-GitHub mostrará automáticamente los emojis y la estructura visual cuando lo subas ✅
-```
