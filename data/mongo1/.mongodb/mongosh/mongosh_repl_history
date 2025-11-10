@@ -1,6 +1,33 @@
 exit
 db.clientes_migrados.find()
 use db_sanjuanero
+exit
+)
+  }
+    ]
+      { _id: 2, host: "mongo3:27017" }
+      { _id: 1, host: "mongo2:27017" },
+      { _id: 0, host: "mongo1:27017" },
+    members: [
+    _id: "rs0",
+  {
+rs.initiate(
+exit
+est
+docker exec -it mongo1 mongosh
+)
+  }
+    ]
+      { _id: 2, host: "mongo3:27017" }
+      { _id: 1, host: "mongo2:27017" },
+      { _id: 0, host: "mongo1:27017" },
+    members: [
+    _id: "rs0",
+  {
+rs.initiate(
+exit
+db.clientes_migrados.find()
+use db_sanjuanero
 db.clientes_migrados.find()
 use db_sanjuanero
 exit
